@@ -1,22 +1,26 @@
 cmake_minimum_required(VERSION 4.2)
-project(TickCalendar)
+project(TickCalendar LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-find_package(Qt6 COMPONENTS
-        Core
-        Gui
-        Widgets
-        REQUIRED)
+qt_standard_project_setup(REQUIRES 6.5)
 
-add_executable(TickCalendar main.cpp)
-target_link_libraries(TickCalendar
-        Qt::Core
-        Qt::Gui
-        Qt::Widgets
+qt_add_executable(TickCalendar main.cpp)
+
+qt_add_qml_module(TickCalendar
+        URI TickCalendar
+        VERSION 1.0
+        # Keep the module dir from clashing with the executable name
+        OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/qml/TickCalendar
+        QML_FILES
+            Main.qml
 )
 
+target_link_libraries(TickCalendar PRIVATE
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)

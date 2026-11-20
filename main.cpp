@@ -1,10 +1,14 @@
-#include <QApplication>
-#include <QPushButton>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
-    QPushButton button("Hello world!", nullptr);
-    button.resize(200, 100);
-    button.show();
-    return QApplication::exec();
+    QGuiApplication app(argc, argv);
+
+    QQmlApplicationEngine engine;
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+                     &app, [] { QCoreApplication::exit(-1); },
+                     Qt::QueuedConnection);
+    engine.loadFromModule("TickCalendar", "Main");
+
+    return QGuiApplication::exec();
 }
