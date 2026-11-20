@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -92,17 +94,17 @@ ApplicationWindow {
             Action {
                 text: qsTr("&New")
                 shortcut: StandardKey.New
-                onTriggered: runAfterConfirm(() => store.newFile())
+                onTriggered: window.runAfterConfirm(() => store.newFile())
             }
             Action {
                 text: qsTr("&Open…")
                 shortcut: StandardKey.Open
-                onTriggered: runAfterConfirm(() => openDialog.open())
+                onTriggered: window.runAfterConfirm(() => openDialog.open())
             }
             Action {
                 text: qsTr("&Save")
                 shortcut: StandardKey.Save
-                onTriggered: saveThen(null)
+                onTriggered: window.saveThen(null)
             }
             Action {
                 text: qsTr("Save &As…")
@@ -124,7 +126,7 @@ ApplicationWindow {
             Action {
                 text: qsTr("&Copy")
                 shortcut: StandardKey.Copy
-                onTriggered: store.copyMonth(shownYear, shownMonth + 1)
+                onTriggered: store.copyMonth(window.shownYear, window.shownMonth + 1)
             }
         }
     }
@@ -140,7 +142,7 @@ ApplicationWindow {
             Button {
                 text: "‹"
                 font.pixelSize: 20
-                onClicked: previousMonth()
+                onClicked: window.previousMonth()
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Previous month")
             }
@@ -149,12 +151,12 @@ ApplicationWindow {
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: 18
                 font.bold: true
-                text: new Date(shownYear, shownMonth, 1).toLocaleDateString(Qt.locale(), "MMMM yyyy")
+                text: new Date(window.shownYear, window.shownMonth, 1).toLocaleDateString(Qt.locale(), "MMMM yyyy")
             }
             Button {
                 text: "›"
                 font.pixelSize: 20
-                onClicked: nextMonth()
+                onClicked: window.nextMonth()
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Next month")
             }
@@ -185,7 +187,7 @@ ApplicationWindow {
         GridLayout {
             id: grid
 
-            readonly property int leadingDays: (new Date(shownYear, shownMonth, 1).getDay() + 6) % 7
+            readonly property int leadingDays: (new Date(window.shownYear, window.shownMonth, 1).getDay() + 6) % 7
             readonly property date today: new Date()
 
             Layout.fillWidth: true
@@ -203,11 +205,11 @@ ApplicationWindow {
                     required property int index
                     // new Date() normalises out-of-range days into the
                     // previous/next month.
-                    readonly property var date: new Date(shownYear, shownMonth, 1 - grid.leadingDays + index)
+                    readonly property var date: new Date(window.shownYear, window.shownMonth, 1 - grid.leadingDays + index)
                     readonly property int year: date.getFullYear()
                     readonly property int month: date.getMonth() // 0-based
                     readonly property int day: date.getDate()
-                    readonly property bool inMonth: month === shownMonth
+                    readonly property bool inMonth: month === window.shownMonth
                     readonly property bool isToday: year === grid.today.getFullYear()
                                                     && month === grid.today.getMonth()
                                                     && day === grid.today.getDate()
@@ -279,7 +281,7 @@ ApplicationWindow {
         }
         onRejected: {
             onSaved = null
-            pendingAction = null
+            window.pendingAction = null
         }
     }
 
@@ -292,13 +294,13 @@ ApplicationWindow {
         onButtonClicked: (button, role) => {
             switch (button) {
             case MessageDialog.Save:
-                saveThen(runPendingAction)
+                window.saveThen(window.runPendingAction)
                 break
             case MessageDialog.Discard:
-                runPendingAction()
+                window.runPendingAction()
                 break
             default:
-                pendingAction = null
+                window.pendingAction = null
             }
         }
     }
