@@ -28,6 +28,7 @@ qt_add_qml_module(TickCalendar
             TickStore.cpp
         QML_FILES
             Main.qml
+            SettingsDialog.qml
 )
 
 target_link_libraries(TickCalendar PRIVATE

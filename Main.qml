@@ -116,7 +116,13 @@ ApplicationWindow {
             }
             MenuSeparator {}
             Action {
-                text: qsTr("&Quit")
+                text: qsTr("Se&ttings…")
+                shortcut: StandardKey.Preferences
+                onTriggered: settingsDialog.open()
+            }
+            MenuSeparator {}
+            Action {
+                text: qsTr("E&xit")
                 shortcut: StandardKey.Quit
                 onTriggered: window.close()
             }
@@ -303,6 +309,10 @@ ApplicationWindow {
                 window.pendingAction = null
             }
         }
+    }
+
+    SettingsDialog {
+        id: settingsDialog
     }
 
     MessageDialog {
