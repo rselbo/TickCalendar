@@ -12,10 +12,15 @@ Built with Qt 6 Quick (QML) and C++.
   to the previous and next month.
 - Click a day in the month to tick it; click again to remove the tick.
   Today is outlined.
-- **File** menu: New, Open, Save, Save As, Settings and Exit. If there are
-  unsaved changes, you are asked whether to save them before New, Open or
-  closing the window. Unsaved changes are shown with a `*` in the window
-  title.
+- **File** menu: New, Open, Save, Save As, Export, Settings and Exit. If
+  there are unsaved changes, you are asked whether to save them before New,
+  Open or closing the window. Unsaved changes are shown with a `*` in the
+  window title.
+- **File → Export…** fills in the template workbook from Settings with the
+  ticked days of the month on screen and saves it under a new name. The
+  dialog suggests `Kjørebok <yyyy><MM>.xlsm` (e.g. `Kjørebok 202611.xlsm`)
+  and starts in the folder of the last export, or in your Documents folder
+  the first time. See [Export](#export).
 - **Edit → Copy** (Ctrl+C) copies the ticked days of the month on screen to
   the clipboard, earliest first. Each date is in `dd.MM.yyyy` format and
   appears twice, one per line:
@@ -41,8 +46,11 @@ Requirements:
 
 - CMake 4.2 or newer
 - A C++23 compiler
-- Qt 6.5 or newer with the Qt Quick, Qt Quick Controls, Qt Quick Dialogs and
-  Qt Sql modules, and the Qt SQLite driver (`QSQLITE`)
+- Qt 6.5 or newer with the Qt Quick, Qt Quick Controls, Qt Quick Dialogs,
+  Qt Sql and Qt Widgets modules, and the Qt SQLite driver (`QSQLITE`).
+  Excel files are read and written with Qt's private zip classes, so the
+  Qt Core private headers must be installed too (they are part of the
+  normal Qt packages on most Linux distributions).
 
 ```sh
 cmake -S . -B build
@@ -86,6 +94,32 @@ the `.tick` extension by default. The Open dialog also lists `.sqlite` and
 Ticks are kept in memory while you work, and the file is only written when
 you choose Save or Save As.
 
+## Export
+
+Export writes to the first worksheet of the template:
+
+| Cell      | Value                                         |
+|-----------|-----------------------------------------------|
+| `D2`      | Employee number                               |
+| `D3`      | Employee name                                 |
+
+Then two rows per ticked day, earliest first, starting at row 10: the trip
+to the customer, then the trip back.
+
+| Column | Row 10, 12, …            | Row 11, 13, …              |
+|--------|--------------------------|----------------------------|
+| `C`    | Route to customer        | Route from customer        |
+| `D`    | Description to customer  | Description from customer  |
+| `E`    | KM to customer           | KM from customer           |
+| `H`    | Date (`dd.MM.yyyy`)      | Date (`dd.MM.yyyy`)        |
+| `L`    | Toll amount              | Toll amount                |
+
+Empty text settings and numbers that are 0 are left out, so the template's
+own content stays in those cells. The trip table ends at row 75, which is
+room for 33 days. Cells keep the template's formatting, the macros and
+everything else in the workbook are copied unchanged, and Excel recalculates
+the formulas (sums etc.) when the file is opened.
+
 ## Settings
 
 The path of the last opened file and the values from the Settings dialog are
@@ -123,4 +157,5 @@ calendar and forgets the path.
 | `Main.qml`      | Window, menus, month navigation, calendar grid and dialogs.      |
 | `SettingsDialog.qml` | The Settings dialog and the stored trip settings.           |
 | `TickStore.h`   | `TickStore`, the QML type holding the ticked days.               |
-| `TickStore.cpp` | Loading and saving SQLite files, clipboard copy, last-file setting. |
+| `TickStore.cpp` | Loading and saving SQLite files, clipboard copy, export, last-file setting. |
+| `XlsxExport.h`, `XlsxExport.cpp` | Filling in cells of an Excel workbook.             |

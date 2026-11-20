@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -78,6 +79,18 @@ ApplicationWindow {
         }
     }
 
+    // Suggests "Kjørebok <yyyy><MM>.xlsm" for the month on screen, in the
+    // folder of the last export (or the Documents folder the first time).
+    function openExportDialog() {
+        const month = String(shownMonth + 1).padStart(2, "0")
+        const folder = exportDialog.lastFolder.toString() !== ""
+                ? exportDialog.lastFolder
+                : StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        exportDialog.currentFolder = folder
+        exportDialog.selectedFile = folder + "/Kjørebok " + shownYear + month + ".xlsm"
+        exportDialog.open()
+    }
+
     onClosing: close => {
         if (store.modified && !closeConfirmed) {
             close.accepted = false
@@ -113,6 +126,10 @@ ApplicationWindow {
                     saveAsDialog.onSaved = null
                     saveAsDialog.open()
                 }
+            }
+            Action {
+                text: qsTr("&Export…")
+                onTriggered: window.openExportDialog()
             }
             MenuSeparator {}
             Action {
@@ -308,6 +325,31 @@ ApplicationWindow {
             default:
                 window.pendingAction = null
             }
+        }
+    }
+
+    FileDialog {
+        id: exportDialog
+        property url lastFolder
+        title: qsTr("Export")
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "xlsm"
+        nameFilters: [qsTr("Excel macro-enabled workbooks (*.xlsm)"), qsTr("All files (*)")]
+        onAccepted: {
+            lastFolder = currentFolder
+            const trip = settingsDialog.settings
+            store.exportTo(selectedFile, window.shownYear, window.shownMonth + 1, {
+                templateFile: trip.templateFile,
+                employeeName: trip.employeeName,
+                employeeNumber: trip.employeeNumber,
+                routeToCustomer: trip.routeToCustomer,
+                descriptionToCustomer: trip.descriptionToCustomer,
+                kmToCustomer: trip.kmToCustomer,
+                routeFromCustomer: trip.routeFromCustomer,
+                descriptionFromCustomer: trip.descriptionFromCustomer,
+                kmFromCustomer: trip.kmFromCustomer,
+                tollAmount: trip.tollAmount
+            })
         }
     }
 

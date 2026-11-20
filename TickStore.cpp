@@ -1,4 +1,5 @@
 #include "TickStore.h"
+#include "XlsxExport.h"
 
 #include <algorithm>
 
@@ -15,6 +16,12 @@ namespace {
 
 constexpr auto kDateFormat = Qt::ISODate;
 constexpr auto kLastFileKey = "lastFile";
+
+// Dates in the clipboard text and in exported workbooks.
+const auto kExportDateFormat = QStringLiteral("dd.MM.yyyy");
+// The rows of the template's trip table (C10:L75); everything below is sums.
+constexpr qsizetype kExportFirstRow = 10;
+constexpr qsizetype kExportLastRow = 75;
 
 // Opens a private SQLite connection for the lifetime of the object and
 // removes it again afterwards.
@@ -138,18 +145,22 @@ bool TickStore::saveAs(const QUrl &url) {
     return true;
 }
 
-QString TickStore::monthAsText(int year, int month) const {
+QList<QDate> TickStore::ticksInMonth(int year, int month) const {
     QList<QDate> dates;
     for (const QDate &date : m_ticks) {
         if (date.year() == year && date.month() == month)
             dates.append(date);
     }
     std::ranges::sort(dates);
+    return dates;
+}
 
+QString TickStore::monthAsText(int year, int month) const {
+    const QList<QDate> dates = ticksInMonth(year, month);
     QStringList lines;
     lines.reserve(dates.size() * 2);
     for (const QDate &date : std::as_const(dates)) {
-        const QString text = date.toString(QStringLiteral("dd.MM.yyyy"));
+        const QString text = date.toString(kExportDateFormat);
         lines << text << text;
     }
     return lines.join(u'\n');
@@ -157,6 +168,77 @@ QString TickStore::monthAsText(int year, int month) const {
 
 void TickStore::copyMonth(int year, int month) const {
     QGuiApplication::clipboard()->setText(monthAsText(year, month));
+}
+
+bool TickStore::exportTo(const QUrl &url, int year, int month, const QVariantMap &trip) {
+    const QString templatePath = trip.value(QStringLiteral("templateFile")).toString();
+    if (templatePath.isEmpty()) {
+        emit errorOccurred(tr("No template file is set. Choose one in File → Settings."));
+        return false;
+    }
+    if (!QFileInfo::exists(templatePath)) {
+        emit errorOccurred(tr("Template file does not exist: %1").arg(templatePath));
+        return false;
+    }
+
+    const QList<QDate> dates = ticksInMonth(year, month);
+    // Each day takes two rows.
+    const auto lastRow = kExportFirstRow + 2 * dates.size() - 1;
+    if (lastRow > kExportLastRow) {
+        emit errorOccurred(tr("Too many ticked days to export: %1. The template has room for %2.")
+                               .arg(dates.size())
+                               .arg((kExportLastRow - kExportFirstRow + 1) / 2));
+        return false;
+    }
+
+    QList<XlsxExport::Cell> cells;
+    // Text cells are left alone when the setting is empty, and number cells
+    // when it is 0, so the template's own content stays.
+    auto addText = [&](const QString &ref, const QString &key) {
+        const QString text = trip.value(key).toString();
+        if (!text.isEmpty())
+            cells.append({ref, text});
+    };
+    auto addNumber = [&](const QString &ref, const QString &key) {
+        const double number = trip.value(key).toDouble();
+        if (number != 0)
+            cells.append({ref, number});
+    };
+    auto cellRef = [](char column, qsizetype row) {
+        return QStringLiteral("%1%2").arg(QChar::fromLatin1(column)).arg(row);
+    };
+
+    // An employee number of plain digits is written as a number, so Excel
+    // doesn't flag it as a number stored as text.
+    const QString number = trip.value(QStringLiteral("employeeNumber")).toString();
+    bool isInteger = false;
+    const qlonglong numberValue = number.toLongLong(&isInteger);
+    if (isInteger && !number.startsWith(u'0') && !number.startsWith(u'+') && !number.startsWith(u'-'))
+        cells.append({QStringLiteral("D2"), static_cast<double>(numberValue)});
+    else
+        addText(QStringLiteral("D2"), QStringLiteral("employeeNumber"));
+    addText(QStringLiteral("D3"), QStringLiteral("employeeName"));
+
+    qsizetype row = kExportFirstRow;
+    for (const QDate &date : dates) {
+        const QString dateText = date.toString(kExportDateFormat);
+        // First the trip to the customer, then the trip back.
+        for (const QString &suffix : {QStringLiteral("ToCustomer"), QStringLiteral("FromCustomer")}) {
+            addText(cellRef('C', row), QStringLiteral("route") + suffix);
+            addText(cellRef('D', row), QStringLiteral("description") + suffix);
+            addNumber(cellRef('E', row), QStringLiteral("km") + suffix);
+            cells.append({cellRef('H', row), dateText});
+            addNumber(cellRef('L', row), QStringLiteral("tollAmount"));
+            ++row;
+        }
+    }
+
+    const QString path = url.toLocalFile();
+    if (const QString error = XlsxExport::fillWorkbook(templatePath, path, cells); !error.isEmpty()) {
+        emit errorOccurred(error);
+        return false;
+    }
+    return true;
 }
 
 bool TickStore::restoreLastFile() {

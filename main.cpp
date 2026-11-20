@@ -1,9 +1,13 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
+    // QApplication (not QGuiApplication) so that platform themes such as
+    // KDE Plasma can show their native file and message dialogs. Without it,
+    // Qt Quick falls back to its own dialogs, which e.g. don't show the
+    // suggested file name in the Export dialog.
+    QApplication app(argc, argv);
     // Used by QSettings: on Linux settings go to
     // ~/.config/TickCalendar/TickCalendar.conf.
     QGuiApplication::setOrganizationName(QStringLiteral("TickCalendar"));
@@ -18,5 +22,5 @@ int main(int argc, char *argv[]) {
                      Qt::QueuedConnection);
     engine.loadFromModule("TickCalendar", "Main");
 
-    return QGuiApplication::exec();
+    return QApplication::exec();
 }

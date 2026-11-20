@@ -11,7 +11,12 @@ if(NOT is_multi_config AND NOT CMAKE_BUILD_TYPE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick Sql Widgets)
+# QZipReader/QZipWriter, used to edit Excel workbooks, are private Qt API.
+# That ties the build to the installed Qt version, which is fine for an app
+# that is built against the system Qt; silence Qt's warning about it.
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
+find_package(Qt6 REQUIRED COMPONENTS CorePrivate)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -26,6 +31,8 @@ qt_add_qml_module(TickCalendar
         SOURCES
             TickStore.h
             TickStore.cpp
+            XlsxExport.h
+            XlsxExport.cpp
         QML_FILES
             Main.qml
             SettingsDialog.qml
@@ -33,10 +40,12 @@ qt_add_qml_module(TickCalendar
 
 target_link_libraries(TickCalendar PRIVATE
         Qt::Core
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
         Qt::Quick
         Qt::Sql
+        Qt::Widgets
 )
 
 # Warnings for all builds, treated as errors. Pass

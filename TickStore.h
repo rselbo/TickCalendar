@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSet>
 #include <QUrl>
+#include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
 // Holds the set of ticked days in memory and loads/saves it from/to an
@@ -42,6 +43,13 @@ public:
     // Puts monthAsText() on the clipboard.
     Q_INVOKABLE void copyMonth(int year, int month) const;
 
+    // Exports the ticked days of the given month (1-based) to an Excel
+    // workbook at url, based on the template file named in trip. trip holds
+    // the trip settings, with the same keys as the [trip] settings group
+    // (templateFile, employeeName, routeToCustomer, kmToCustomer, …).
+    // An existing file at url is replaced.
+    Q_INVOKABLE bool exportTo(const QUrl &url, int year, int month, const QVariantMap &trip);
+
     // Reopens the file that was open when the app last closed, if it still
     // exists. Returns true if a file was opened.
     Q_INVOKABLE bool restoreLastFile();
@@ -56,6 +64,8 @@ private:
     void setModified(bool modified);
     void setFileUrl(const QUrl &url);
     bool writeTo(const QString &path);
+    // The ticked days of the given month (1-based), earliest first.
+    [[nodiscard]] QList<QDate> ticksInMonth(int year, int month) const;
 
     QSet<QDate> m_ticks;
     int m_revision = 0;
