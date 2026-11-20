@@ -119,6 +119,14 @@ ApplicationWindow {
                 onTriggered: window.close()
             }
         }
+        Menu {
+            title: qsTr("&Edit")
+            Action {
+                text: qsTr("&Copy")
+                shortcut: StandardKey.Copy
+                onTriggered: store.copyMonth(shownYear, shownMonth + 1)
+            }
+        }
     }
 
     ColumnLayout {

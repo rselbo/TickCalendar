@@ -1,6 +1,10 @@
 #include "TickStore.h"
 
+#include <algorithm>
+
+#include <QClipboard>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QSettings>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -132,6 +136,27 @@ bool TickStore::saveAs(const QUrl &url) {
     setFileUrl(url);
     setModified(false);
     return true;
+}
+
+QString TickStore::monthAsText(int year, int month) const {
+    QList<QDate> dates;
+    for (const QDate &date : m_ticks) {
+        if (date.year() == year && date.month() == month)
+            dates.append(date);
+    }
+    std::ranges::sort(dates);
+
+    QStringList lines;
+    lines.reserve(dates.size() * 2);
+    for (const QDate &date : std::as_const(dates)) {
+        const QString text = date.toString(QStringLiteral("dd.MM.yyyy"));
+        lines << text << text;
+    }
+    return lines.join(u'\n');
+}
+
+void TickStore::copyMonth(int year, int month) const {
+    QGuiApplication::clipboard()->setText(monthAsText(year, month));
 }
 
 bool TickStore::restoreLastFile() {

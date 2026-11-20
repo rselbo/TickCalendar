@@ -36,6 +36,12 @@ public:
     Q_INVOKABLE bool save();
     Q_INVOKABLE bool saveAs(const QUrl &url);
 
+    // The ticked days of the given month (1-based), earliest first, as
+    // dd.MM.yyyy. Each date is listed twice; all lines are separated by '\n'.
+    Q_INVOKABLE [[nodiscard]] QString monthAsText(int year, int month) const;
+    // Puts monthAsText() on the clipboard.
+    Q_INVOKABLE void copyMonth(int year, int month) const;
+
     // Reopens the file that was open when the app last closed, if it still
     // exists. Returns true if a file was opened.
     Q_INVOKABLE bool restoreLastFile();
