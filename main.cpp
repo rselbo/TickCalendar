@@ -1,4 +1,5 @@
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[]) {
@@ -7,6 +8,9 @@ int main(int argc, char *argv[]) {
     // ~/.config/TickCalendar/TickCalendar.conf.
     QGuiApplication::setOrganizationName(QStringLiteral("TickCalendar"));
     QGuiApplication::setApplicationName(QStringLiteral("TickCalendar"));
+    // Lets Wayland compositors match the window to TickCalendar.desktop.
+    QGuiApplication::setDesktopFileName(QStringLiteral("TickCalendar"));
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/icon/check.svg")));
 
     QQmlApplicationEngine engine;
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,

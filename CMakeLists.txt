@@ -60,15 +60,24 @@ endif()
 target_compile_definitions(TickCalendar PRIVATE
         $<$<CONFIG:Release,MinSizeRel>:QT_NO_DEBUG_OUTPUT>)
 
-# The QML module is compiled into the executable, so only it needs installing.
+qt_add_resources(TickCalendar "icon"
+        PREFIX /
+        FILES icon/check.svg
+)
+
+# The QML module and the window icon are compiled into the executable.
 include(GNUInstallDirs)
 install(TARGETS TickCalendar
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES icon/check.svg
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+        RENAME tickcalendar.svg)
 
-# Desktop entry pointing at the installed executable. The path is filled in at
-# install time, so it follows --prefix.
+# Desktop entry pointing at the installed executable and icon. The paths are
+# filled in at install time, so they follow --prefix.
 install(CODE "
     set(TICKCALENDAR_BIN \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/TickCalendar\")
+    set(TICKCALENDAR_ICON \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps/tickcalendar.svg\")
     configure_file(\"${CMAKE_CURRENT_SOURCE_DIR}/TickCalendar.desktop.in\"
             \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/applications/TickCalendar.desktop\"
             @ONLY)

@@ -59,7 +59,8 @@ ln -s ~/.local/share/TickCalendar/share/applications/TickCalendar.desktop \
       ~/.local/share/applications/
 ```
 
-This installs the program to `bin/TickCalendar` and a desktop entry to
+This installs the program to `bin/TickCalendar`, its icon to
+`share/icons/hicolor/scalable/apps/tickcalendar.svg` and a desktop entry to
 `share/applications/TickCalendar.desktop` under the prefix. The link makes
 TickCalendar show up in the application launcher; it is only needed once.
 
