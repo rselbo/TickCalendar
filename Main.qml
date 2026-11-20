@@ -29,6 +29,8 @@ ApplicationWindow {
         }
     }
 
+    Component.onCompleted: store.restoreLastFile()
+
     function previousMonth() {
         if (shownMonth === 0) {
             shownMonth = 11

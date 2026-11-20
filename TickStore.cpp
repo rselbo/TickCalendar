@@ -1,6 +1,7 @@
 #include "TickStore.h"
 
 #include <QFileInfo>
+#include <QSettings>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -9,6 +10,7 @@
 namespace {
 
 constexpr auto kDateFormat = Qt::ISODate;
+constexpr auto kLastFileKey = "lastFile";
 
 // Opens a private SQLite connection for the lifetime of the object and
 // removes it again afterwards.
@@ -132,6 +134,19 @@ bool TickStore::saveAs(const QUrl &url) {
     return true;
 }
 
+bool TickStore::restoreLastFile() {
+    QSettings settings;
+    const QUrl url = settings.value(kLastFileKey).toUrl();
+    if (url.isEmpty())
+        return false;
+    if (!QFileInfo::exists(url.toLocalFile())) {
+        // The file was moved or deleted since last time; start fresh.
+        settings.remove(kLastFileKey);
+        return false;
+    }
+    return open(url);
+}
+
 bool TickStore::writeTo(const QString &path) {
     ScopedDb scoped(path);
     if (!scoped.ok()) {
@@ -182,4 +197,12 @@ void TickStore::setFileUrl(const QUrl &url) {
         return;
     m_fileUrl = url;
     emit fileUrlChanged();
+
+    // Remember the current file so it is reopened on the next start. Saving
+    // it on every change (rather than on exit) also survives crashes.
+    QSettings settings;
+    if (url.isEmpty())
+        settings.remove(kLastFileKey);
+    else
+        settings.setValue(kLastFileKey, url.toString());
 }

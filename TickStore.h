@@ -36,6 +36,10 @@ public:
     Q_INVOKABLE bool save();
     Q_INVOKABLE bool saveAs(const QUrl &url);
 
+    // Reopens the file that was open when the app last closed, if it still
+    // exists. Returns true if a file was opened.
+    Q_INVOKABLE bool restoreLastFile();
+
 signals:
     void ticksChanged();
     void modifiedChanged();
