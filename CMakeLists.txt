@@ -3,7 +3,7 @@ project(TickCalendar LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick Sql)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -14,6 +14,9 @@ qt_add_qml_module(TickCalendar
         VERSION 1.0
         # Keep the module dir from clashing with the executable name
         OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/qml/TickCalendar
+        SOURCES
+            TickStore.h
+            TickStore.cpp
         QML_FILES
             Main.qml
 )
@@ -23,4 +26,5 @@ target_link_libraries(TickCalendar PRIVATE
         Qt::Gui
         Qt::Qml
         Qt::Quick
+        Qt::Sql
 )
