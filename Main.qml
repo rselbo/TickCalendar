@@ -150,60 +150,97 @@ ApplicationWindow {
             }
         }
 
-        DayOfWeekRow {
+        // Weekday headings, always Monday first. Names follow the locale.
+        RowLayout {
             Layout.fillWidth: true
-            locale: grid.locale
+            spacing: 0
+
+            Repeater {
+                // JS weekday numbers: 1 = Monday … 6 = Saturday, 0 = Sunday.
+                model: [1, 2, 3, 4, 5, 6, 0]
+                delegate: Label {
+                    required property int modelData
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    horizontalAlignment: Text.AlignHCenter
+                    font.bold: true
+                    text: Qt.locale().dayName(modelData, Locale.ShortFormat)
+                }
+            }
         }
 
-        MonthGrid {
+        // Six weeks starting on the Monday on or before the 1st of the month.
+        // A custom grid is used instead of MonthGrid because MonthGrid takes
+        // the first day of the week from the locale, which can't be overridden.
+        GridLayout {
             id: grid
+
+            readonly property int leadingDays: (new Date(shownYear, shownMonth, 1).getDay() + 6) % 7
+            readonly property date today: new Date()
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            year: shownYear
-            month: shownMonth
-            locale: Qt.locale()
+            columns: 7
+            rowSpacing: 2
+            columnSpacing: 2
 
-            delegate: Rectangle {
-                id: cell
+            Repeater {
+                model: 42
 
-                required property var model
-                readonly property bool inMonth: model.month === grid.month
-                // store.revision makes this re-evaluate when ticks change.
-                readonly property bool ticked: store.revision >= 0
-                                               && store.isTicked(model.year, model.month + 1, model.day)
+                delegate: Rectangle {
+                    id: cell
 
-                radius: 6
-                color: ticked && inMonth ? palette.highlight
-                                         : mouse.containsMouse && inMonth ? palette.midlight
-                                                                          : "transparent"
-                border.width: model.today ? 2 : 0
-                border.color: palette.highlight
+                    required property int index
+                    // new Date() normalises out-of-range days into the
+                    // previous/next month.
+                    readonly property var date: new Date(shownYear, shownMonth, 1 - grid.leadingDays + index)
+                    readonly property int year: date.getFullYear()
+                    readonly property int month: date.getMonth() // 0-based
+                    readonly property int day: date.getDate()
+                    readonly property bool inMonth: month === shownMonth
+                    readonly property bool isToday: year === grid.today.getFullYear()
+                                                    && month === grid.today.getMonth()
+                                                    && day === grid.today.getDate()
+                    // store.revision makes this re-evaluate when ticks change.
+                    readonly property bool ticked: store.revision >= 0
+                                                   && store.isTicked(year, month + 1, day)
 
-                Label {
-                    anchors.centerIn: parent
-                    text: cell.model.day
-                    font.bold: cell.ticked && cell.inMonth
-                    color: cell.ticked && cell.inMonth ? palette.highlightedText : palette.text
-                    opacity: cell.inMonth ? 1.0 : 0.35
-                }
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 1
+                    radius: 6
+                    color: ticked && inMonth ? palette.highlight
+                                             : mouse.containsMouse && inMonth ? palette.midlight
+                                                                              : "transparent"
+                    border.width: isToday ? 2 : 0
+                    border.color: palette.highlight
 
-                Label {
-                    visible: cell.ticked && cell.inMonth
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: 4
-                    text: "✓"
-                    color: palette.highlightedText
-                }
+                    Label {
+                        anchors.centerIn: parent
+                        text: cell.day
+                        font.bold: cell.ticked && cell.inMonth
+                        color: cell.ticked && cell.inMonth ? palette.highlightedText : palette.text
+                        opacity: cell.inMonth ? 1.0 : 0.35
+                    }
 
-                MouseArea {
-                    id: mouse
-                    anchors.fill: parent
-                    enabled: cell.inMonth
-                    hoverEnabled: true
-                    cursorShape: cell.inMonth ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: store.toggle(cell.model.year, cell.model.month + 1, cell.model.day)
+                    Label {
+                        visible: cell.ticked && cell.inMonth
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 4
+                        text: "✓"
+                        color: palette.highlightedText
+                    }
+
+                    MouseArea {
+                        id: mouse
+                        anchors.fill: parent
+                        enabled: cell.inMonth
+                        hoverEnabled: true
+                        cursorShape: cell.inMonth ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: store.toggle(cell.year, cell.month + 1, cell.day)
+                    }
                 }
             }
         }
