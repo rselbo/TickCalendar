@@ -43,6 +43,14 @@ cmake --build build
 ./build/TickCalendar
 ```
 
+The build type defaults to `Release`, which is optimized (`-O3`, link-time
+optimization) and has `qDebug()` output turned off. For a debug build, add
+`-DCMAKE_BUILD_TYPE=Debug` to the first command.
+
+All builds turn on compiler warnings and treat them as errors. To build anyway
+when there are warnings, add `--compile-no-warning-as-error` to the first
+command.
+
 ## File format
 
 A TickCalendar file is an SQLite database with one table:

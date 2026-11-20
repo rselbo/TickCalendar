@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 4.2)
 project(TickCalendar LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Build an optimized release version unless another build type is chosen.
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT is_multi_config AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick Sql)
 
@@ -29,3 +37,25 @@ target_link_libraries(TickCalendar PRIVATE
         Qt::Quick
         Qt::Sql
 )
+
+# Warnings for all builds, treated as errors. Pass
+# --compile-no-warning-as-error to cmake to build anyway.
+set_target_properties(TickCalendar PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+if(MSVC)
+    target_compile_options(TickCalendar PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(TickCalendar PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion)
+endif()
+
+# Release builds: link-time optimization, and no qDebug() output.
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error LANGUAGES CXX)
+if(ipo_supported)
+    set_target_properties(TickCalendar PROPERTIES
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+            INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL ON)
+else()
+    message(STATUS "Link-time optimization not supported: ${ipo_error}")
+endif()
+target_compile_definitions(TickCalendar PRIVATE
+        $<$<CONFIG:Release,MinSizeRel>:QT_NO_DEBUG_OUTPUT>)
