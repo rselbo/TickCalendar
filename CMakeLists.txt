@@ -59,3 +59,18 @@ else()
 endif()
 target_compile_definitions(TickCalendar PRIVATE
         $<$<CONFIG:Release,MinSizeRel>:QT_NO_DEBUG_OUTPUT>)
+
+# The QML module is compiled into the executable, so only it needs installing.
+include(GNUInstallDirs)
+install(TARGETS TickCalendar
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Desktop entry pointing at the installed executable. The path is filled in at
+# install time, so it follows --prefix.
+install(CODE "
+    set(TICKCALENDAR_BIN \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/TickCalendar\")
+    configure_file(\"${CMAKE_CURRENT_SOURCE_DIR}/TickCalendar.desktop.in\"
+            \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/applications/TickCalendar.desktop\"
+            @ONLY)
+    message(STATUS \"Installing: \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/applications/TickCalendar.desktop\")
+")

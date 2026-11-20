@@ -51,6 +51,18 @@ All builds turn on compiler warnings and treat them as errors. To build anyway
 when there are warnings, add `--compile-no-warning-as-error` to the first
 command.
 
+## Installing
+
+```sh
+cmake --install build --prefix ~/.local/share/TickCalendar
+ln -s ~/.local/share/TickCalendar/share/applications/TickCalendar.desktop \
+      ~/.local/share/applications/
+```
+
+This installs the program to `bin/TickCalendar` and a desktop entry to
+`share/applications/TickCalendar.desktop` under the prefix. The link makes
+TickCalendar show up in the application launcher; it is only needed once.
+
 ## File format
 
 A TickCalendar file is an SQLite database with one table:

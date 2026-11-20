@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=TickCalendar
+Comment=Tick off days in a calendar
+Exec="@TICKCALENDAR_BIN@"
+Icon=x-office-calendar
+Terminal=false
+Categories=Office;Calendar;Qt;
+StartupWMClass=TickCalendar
