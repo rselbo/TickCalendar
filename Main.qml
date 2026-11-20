@@ -248,8 +248,11 @@ ApplicationWindow {
                     color: ticked && inMonth ? palette.highlight
                                              : mouse.containsMouse && inMonth ? palette.midlight
                                                                               : "transparent"
-                    border.width: isToday ? 2 : 0
-                    border.color: palette.highlight
+                    // Today is outlined. On a ticked day the fill already uses the
+                    // highlight colour, so the outline switches to the text colour
+                    // used on highlight to stay visible.
+                    border.width: isToday ? 3 : 0
+                    border.color: ticked && inMonth ? palette.highlightedText : palette.highlight
 
                     Label {
                         anchors.centerIn: parent
